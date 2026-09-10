@@ -638,6 +638,14 @@ export function initTerminal(paneEl, paneData) {
       ? Math.round(e.deltaY * 1.125)
       : Math.round(e.deltaY / 33) || (e.deltaY > 0 ? 1 : -1);
 
+    // Claude's alternate-screen UI does not use Up/Down to scroll the
+    // conversation. Ask the outer tmux session to enter copy-mode instead;
+    // this moves through its history without altering Claude's input.
+    if (action === 'tmux') {
+      sendWs('terminal:scroll', { terminalId: paneData.id, lines }, paneData.agentId);
+      return;
+    }
+
     // TUI app in alternate screen (tmux reports this via claude:states polling)
     // — send arrow keys so the app scrolls its content
     if (action === 'arrows') {

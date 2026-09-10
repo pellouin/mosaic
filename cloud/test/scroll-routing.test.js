@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chooseScrollAction, isNestedMultiplexer } from '../src-client/modules/scroll-routing.js';
+import { chooseScrollAction, isClaudeCli, isNestedMultiplexer } from '../src-client/modules/scroll-routing.js';
 
 /**
  * gh-20: scrolling a pane attached to an external tmux session cycled previous
@@ -25,13 +25,36 @@ test('an ordinary shell scrolls xterm own buffer', () => {
 test('an alternate-screen TUI still gets arrow keys', () => {
   // The behaviour that must not regress: vim, htop and less have no scrollback
   // to offer, so arrows are the only way to move their viewport.
-  for (const cmd of ['vim', 'nvim', 'htop', 'less', 'nano', 'claude']) {
+  for (const cmd of ['vim', 'nvim', 'htop', 'less', 'nano']) {
     assert.equal(
       chooseScrollAction({ mouseActive: false, alternateOn: true, foregroundCommand: cmd }),
       'arrows',
       `${cmd} should still scroll with arrows`,
     );
   }
+});
+
+test('Claude in alternate screen scrolls through outer tmux history', () => {
+  for (const cmd of ['claude', '/usr/local/bin/claude', 'claude-code']) {
+    assert.equal(
+      chooseScrollAction({ mouseActive: false, alternateOn: true, foregroundCommand: cmd }),
+      'tmux',
+    );
+  }
+});
+
+test('Claude still uses native mouse reporting when it requests it', () => {
+  assert.equal(
+    chooseScrollAction({ mouseActive: true, alternateOn: true, foregroundCommand: 'claude' }),
+    'mouse',
+  );
+});
+
+test('Claude outside alternate screen scrolls xterm own buffer', () => {
+  assert.equal(
+    chooseScrollAction({ mouseActive: false, alternateOn: false, foregroundCommand: 'claude' }),
+    'buffer',
+  );
 });
 
 test('an attached tmux gets nothing rather than arrow keys', () => {
@@ -91,4 +114,12 @@ test('isNestedMultiplexer does not match names that merely contain tmux', () => 
   assert.equal(isNestedMultiplexer('screenfetch'), false);
   assert.equal(isNestedMultiplexer(null), false);
   assert.equal(isNestedMultiplexer(''), false);
+});
+
+test('isClaudeCli matches the executable name only', () => {
+  assert.ok(isClaudeCli('claude'));
+  assert.ok(isClaudeCli('/opt/bin/claude-code'));
+  assert.equal(isClaudeCli('my-claude-wrapper'), false);
+  assert.equal(isClaudeCli('zsh'), false);
+  assert.equal(isClaudeCli(null), false);
 });

@@ -21,6 +21,12 @@ export function isNestedMultiplexer(foregroundCommand) {
   return NESTED_MULTIPLEXERS.has(name);
 }
 
+export function isClaudeCli(foregroundCommand) {
+  if (!foregroundCommand) return false;
+  const name = String(foregroundCommand).trim().split('/').pop().toLowerCase();
+  return name === 'claude' || name.startsWith('claude-');
+}
+
 /**
  * Decide how to route a scroll.
  *
@@ -30,6 +36,8 @@ export function isNestedMultiplexer(foregroundCommand) {
  * 'arrows' — an alternate-screen TUI with no mouse reporting. It has no
  *            scrollback of its own to offer, so arrow keys are the only way to
  *            move its viewport.
+ * 'tmux'   — Claude in the alternate screen: use the outer tmux copy-mode.
+ *            Arrow keys affect Claude's input instead of its conversation.
  * 'buffer' — an ordinary shell: scroll xterm's own scrollback.
  * 'none'   — an attached inner multiplexer with mouse reporting off. Arrows
  *            would land on its shell's command line, and xterm's alternate
@@ -40,5 +48,6 @@ export function chooseScrollAction({ mouseActive, alternateOn, foregroundCommand
   if (mouseActive) return 'mouse';
   if (!alternateOn) return 'buffer';
   if (isNestedMultiplexer(foregroundCommand)) return 'none';
+  if (isClaudeCli(foregroundCommand)) return 'tmux';
   return 'arrows';
 }
