@@ -151,10 +151,11 @@ async function startTtyd(tmuxSession) {
   const port = getAvailablePort();
 
   return new Promise((resolve, reject) => {
+    const [tmuxExecutable, ...tmuxArgs] = config.tmuxArgs;
     const ttyd = spawn('ttyd', [
       '-p', String(port),
       '-W',
-      'tmux', 'attach-session', '-t', tmuxSession,
+      tmuxExecutable, ...tmuxArgs, 'attach-session', '-t', tmuxSession,
     ], {
       stdio: ['ignore', 'pipe', 'pipe'],
     });

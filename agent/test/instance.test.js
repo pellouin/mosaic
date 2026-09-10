@@ -7,6 +7,7 @@ import {
   TTYD_RANGE_END,
   TTYD_BLOCK_SIZE,
   getInstanceKey,
+  getTmuxArgs,
   getTtydPortRange,
   getTmuxCommand,
   isDefaultInstance,
@@ -93,10 +94,12 @@ test('the default instance uses the standard tmux server', () => {
   // Sessions a user already has live on the default socket, so the default
   // instance must not pass -L or they would disappear from their dashboard.
   assert.equal(getTmuxCommand('default'), 'tmux');
+  assert.deepEqual(getTmuxArgs('default'), ['tmux']);
 });
 
 test('other instances get their own tmux socket', () => {
   assert.equal(getTmuxCommand('localhost-2000'), 'tmux -L localhost-2000');
+  assert.deepEqual(getTmuxArgs('localhost-2000'), ['tmux', '-L', 'localhost-2000']);
   assert.notEqual(getTmuxCommand('localhost-2000'), getTmuxCommand('localhost-2001'));
 });
 

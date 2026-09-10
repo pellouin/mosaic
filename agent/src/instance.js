@@ -79,8 +79,17 @@ export function isDefaultInstance(instanceKey) {
  * its terminals never appear in — or get closed by — another instance.
  */
 export function getTmuxCommand(instanceKey) {
-  if (isDefaultInstance(instanceKey)) return 'tmux';
-  return `tmux -L ${instanceKey}`;
+  return getTmuxArgs(instanceKey).join(' ');
+}
+
+/**
+ * The tmux executable and arguments for APIs such as child_process.spawn.
+ * Keeping this structured prevents callers from silently dropping the
+ * instance socket when they cannot use the shell-oriented command string.
+ */
+export function getTmuxArgs(instanceKey) {
+  if (isDefaultInstance(instanceKey)) return ['tmux'];
+  return ['tmux', '-L', instanceKey];
 }
 
 /**
